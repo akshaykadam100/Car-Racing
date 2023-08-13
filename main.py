@@ -63,8 +63,16 @@ car = CarAgent(
     state_size=observation_size,
 )
 
-for episode_no in range(200):
-    logger.critical(f"Episode No.: {episode_no+1}")
+if not os.path.exists('data'):
+    os.mkdir('data')
+
+file = open("test.csv", "a")
+content = f"Episode,TimeStep,Reward,Memory,Epsilon"
+file.write(content)
+file.close()
+
+for episode_no in range(1000):
+    logger.critical(f"Episode No.: {episode_no + 1}")
 
     # Initiate one sample step
     observation = env.reset()[0]
@@ -74,12 +82,13 @@ for episode_no in range(200):
     score = 0
 
     for t in range(200000):
-
-        logger.critical(f"Time Step.: {t + 1}")
+        if t % 100 == 0:
+            logger.critical(f"Time Step.: {t + 1}")
 
         # Action Taken
         action = car.get_action(observation)
-        logger.debug(f"Action Taken: {action}")
+        if t % 100 == 0:
+            logger.debug(f"Action Taken: {action}")
 
         # Initiate the random step / action recorded in previous line
         next_observation, reward, terminated, truncated, info = env.step(action)
@@ -89,13 +98,13 @@ for episode_no in range(200):
 
         car.append_sample(observation, action, reward, next_observation, terminated)
 
-        if t % 100 == 0:
+        if t % 10 == 0:
             car.train_model()
-        env.render()
+
+        # env.render()
 
         score += reward
         observation = next_observation
-        logger.critical(f"Length of Memory: {len(car.memory)}")
 
         # If terminal state then True else False
         if terminated:
@@ -106,12 +115,18 @@ for episode_no in range(200):
             logger.critical("Maximum Negative Reward Reached")
             break
 
-    logger.critical(f"End of Episode {episode_no+1}")
+    logger.critical(f"Timesteps covered in Episode: {t+1}")
+    logger.critical(f"End of Episode {episode_no + 1}")
     logger.critical(f"Total Reward Collected For This Episode: {score}")
     logger.critical(f"Memory Length: {len(car.memory)}")
     logger.critical(f"Epsilon: {car.epsilon}")
 
-    if episode_no+1 % 10 == 0:
+    file = open("test.csv", "a")
+    content = f"\n{episode_no+1},{t+1},{score},{len(car.memory)},{car.epsilon}"
+    file.write(content)
+    file.close()
+
+    if episode_no + 1 % 10 == 0:
         car.save_model_weights(episode=episode_no + 1)
 
     if car.epsilon > car.epsilon_min:

@@ -23,7 +23,7 @@ class CarAgent:
             epsilon=1,
             epsilon_decay=0.99,
             epsilon_min=0.01,
-            memory_size=200000,
+            memory_size=1000000,
             batch_size=32,
     ):
 
